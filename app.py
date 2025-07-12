@@ -1,5 +1,6 @@
 import streamlit as st
 from transformers import pipeline
+import torch
 import time
 import plotly.graph_objects as go
 
