@@ -121,7 +121,7 @@ def load_model():
     try:
         classifier = pipeline(
             "zero-shot-classification",
-            model="facebook/bart-large-mnli",
+            model="typeform/distilbert-base-uncased-mnli",
             device=0 if torch.cuda.is_available() else -1
         )
         return classifier
@@ -354,7 +354,7 @@ def main():
         st.markdown("---")
         st.markdown("## 🧠 AI Technology")
         st.markdown("""
-        - **Model**: `Facebook BART-Large-MNLI`
+        - **Model**: `joeddav/distilbert-base-uncased-mnli`
         - **Method**: Zero-shot classification
         - **Analysis**: Multi-label confidence scoring
         - **Accuracy**: Trained on millions of text samples
