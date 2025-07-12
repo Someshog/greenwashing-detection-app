@@ -2,10 +2,11 @@ import streamlit as st
 from transformers import pipeline
 import torch
 import time
+import plotly.graph_objects as go
 
 # Set page config
 st.set_page_config(
-    page_title="Greenwashing Detection App",
+    page_title="Spot the Greenwash: Know What You're Buying",
     page_icon="🌱",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -15,15 +16,69 @@ st.set_page_config(
 st.markdown("""
 <style>
     .main-header {
+        font-family: 'Playfair Display', serif !important;
         font-size: 2.5rem;
-        color: #2E8B57;
+        color: #ffffff !important;
         text-align: center;
         margin-bottom: 2rem;
+    }
+    
+    .tagline {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 1.25rem;
+        color: #ffffff;
+        text-align: center;
+        margin-bottom: 3rem;
+        font-weight: 400;
+        opacity: 0.9;
     }
     .subheader {
         font-size: 1.5rem;
         color: #228B22;
         margin-bottom: 1rem;
+    }
+    .section-box {
+        background: none;
+        backdrop-filter: blur(10px);
+        border-radius: 20px;
+        color: #ffffff;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin: 1rem auto;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        transition: all 0.3s ease;
+    }
+    
+    .section-box:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+    }
+    
+    .section-title {
+        font-family: 'Playfair Display', serif !important;
+        color: #ffffff;
+        font-size: 1.7rem;
+        margin-bottom: 1rem;
+        font-weight: 700;
+        position: relative;
+    }
+    
+    .section-title::after {
+        content: '';
+        position: absolute;
+        bottom: -10px;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 2px;
+    }
+    
+    .section-text {
+        font-family: 'Inter', sans-serif !important;
+        font-size: 1.0rem;
+        color: #ffffff;
+        line-height: 1.7;
     }
     .result-box {
         padding: 1rem;
@@ -45,21 +100,12 @@ st.markdown("""
         border: 1px solid #ffeaa7;
         color: #856404;
     }
-    .certification {
-        background-color: #d1ecf1;
-        border: 1px solid #bee5eb;
-        color: #0c5460;
-    }
-    .health-focused {
-        background-color: #e2e3f3;
-        border: 1px solid #d1d4e9;
-        color: #383d41;
-    }
     .confidence-bar {
         height: 20px;
         border-radius: 10px;
         margin: 0.5rem 0;
     }
+    
 </style>
 """, unsafe_allow_html=True)
 
@@ -83,33 +129,46 @@ def load_model():
         st.error(f"Error loading model: {str(e)}")
         return None
 
+# Label mapping for main categories and their detailed indicators
+label_map = {
+    "Greenwashing": [
+        "Misleading environmental claim",
+        "Vague sustainability statement",
+        "Unsubstantiated green marketing",
+        "Overstated eco-friendly benefits",
+        "Use of irrelevant green imagery"
+    ],
+    "Genuine Sustainability": [
+        "Authentic environmental commitment",
+        "Verified sustainable practice",
+        "Third-party sustainability certification",
+        "Transparency in environmental impact",
+        "Evidence-based climate action"
+    ],
+    "Marketing Hype": [
+        "Generic green buzzwords",
+        "Emotional appeal without proof",
+        "Sustainability used as a selling point",
+        "Trendy environmental phrasing"
+    ]
+}
+
 def analyze_claim(text, classifier):
     """Analyze sustainability claim for greenwashing"""
     candidate_labels = [
         "Greenwashing",
         "Genuine Sustainability",
-        "Marketing Hype",
-        "Certification-Based Claim",
-        "Nutritional Health Focused"
+        "Marketing Hype"
     ]
-    
-    # Add more detailed labels for better classification
-    detailed_labels = [
-        "Misleading environmental claim",
-        "Vague sustainability statement", 
-        "Unsubstantiated green marketing",
-        "Authentic environmental commitment",
-        "Verified sustainable practice",
-        "Transparent sustainability effort"
-    ]
-    
+    # Use all detailed labels from label_map
+    detailed_labels = []
+    for labels in label_map.values():
+        detailed_labels.extend(labels)
     try:
         # Primary classification
-        result = classifier(text, candidate_labels)
-        
+        result = classifier(text, candidate_labels, multi_label=True)
         # Detailed analysis
-        detailed_result = classifier(text, detailed_labels)
-        
+        detailed_result = classifier(text, detailed_labels, multi_label=True)
         return result, detailed_result
     except Exception as e:
         st.error(f"Error during classification: {str(e)}")
@@ -137,14 +196,6 @@ def display_results(result, detailed_result, text):
         result_class = "marketing-hype"
         icon = "📢"
         color = "#ffc107"
-    elif prediction == "Certification-Based Claim":
-        result_class = "certification"
-        icon = "🏆"
-        color = "#17a2b8"
-    elif prediction == "Nutritional Health Focused":
-        result_class = "health-focused"
-        icon = "🥗"
-        color = "#6f42c1"
     else:
         result_class = "genuine"
         icon = "❓"
@@ -158,6 +209,44 @@ def display_results(result, detailed_result, text):
         <p><strong>Confidence:</strong> {confidence:.2%}</p>
     </div>
     """, unsafe_allow_html=True)
+
+    # Big bold gauge chart for top prediction
+    st.markdown("#### Main Classification Confidence")
+    fig = go.Figure(go.Indicator(
+    mode="gauge+number",
+    value=confidence * 100,
+    number={
+        'suffix': " %",
+        'font': {'size': 28, 'color': color}
+    },
+    title={
+        'text': f"<b>{prediction}</b>",
+        'font': {'size': 20}
+    },
+    gauge={
+        'axis': {'range': [0, 100], 'tickwidth': 1, 'tickcolor': "#444"},
+        'bar': {'color': color, 'thickness': 0.2},
+        'bgcolor': "white",
+        'borderwidth': 1,
+        'bordercolor': "#ccc",
+        'steps': [
+            {'range': [0, 50], 'color': '#f2f2f2'},
+            {'range': [50, 100], 'color': '#e6f4ea' if confidence >= 0.5 else '#fbeaea'}
+        ],
+        'threshold': {
+            'line': {'color': color, 'width': 2},
+            'thickness': 0.7,
+            'value': confidence * 100
+        },
+    }
+))
+
+    fig.update_layout(
+        margin=dict(t=10, b=10, l=10, r=10),
+        height=250  # Reduce overall height
+    )
+        # Display
+    st.plotly_chart(fig, use_container_width=True)
     
     # Confidence visualization
     st.subheader("Confidence Scores")
@@ -165,70 +254,122 @@ def display_results(result, detailed_result, text):
         st.metric(label, f"{score:.2%}")
         st.progress(score)
     
-    # Detailed analysis
+
+#         st.subheader("Detailed Analysis")
+        
+#         # Group detailed results by main category using label_map
+#         grouped = {cat: [] for cat in label_map}
+#         for label, score in zip(detailed_result['labels'], detailed_result['scores']):
+#             for cat, labels in label_map.items():
+#                 if label in labels:
+#                     grouped[cat].append((label, score))
+#                     break
+        
+#         col1, col2, col3 = st.columns(3)
+        
+#         with col1:
+#             st.markdown("**Greenwashing Indicators:**")
+#             for label, score in grouped["Greenwashing"]:
+#                 st.write(f"• {label}: {score:.2%}")
+        
+#         with col2:
+#             st.markdown("**Genuine Sustainability Indicators:**")
+#             for label, score in grouped["Genuine Sustainability"]:
+#                 st.write(f"• {label}: {score:.2%}")
+        
+#         with col3:
+#             st.markdown("**Marketing Hype Indicators:**")
+#             for label, score in grouped["Marketing Hype"]:
+#                 st.write(f"• {label}: {score:.2%}")
+# Detailed analysis with improved layout
     if detailed_result:
-        st.subheader("Detailed Analysis")
+        st.markdown("---")
+        st.markdown("### 🔍 Detailed Indicator Analysis")
         
-        # Group detailed results
-        problematic_indicators = []
-        positive_indicators = []
-        
+        # Group detailed results by main category
+        grouped = {cat: [] for cat in label_map}
         for label, score in zip(detailed_result['labels'], detailed_result['scores']):
-            if any(keyword in label.lower() for keyword in ['misleading', 'vague', 'unsubstantiated']):
-                problematic_indicators.append((label, score))
-            else:
-                positive_indicators.append((label, score))
+            for cat, labels in label_map.items():
+                if label in labels:
+                    grouped[cat].append((label, score))
+                    break
         
-        col1, col2 = st.columns(2)
+        # Display in three columns with enhanced cards
+        col1, col2, col3 = st.columns(3)
         
         with col1:
-            st.markdown("**Problematic Indicators:**")
-            for label, score in problematic_indicators:
-                st.write(f"• {label}: {score:.2%}")
+            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+            st.markdown("**🚨 Greenwashing Indicators**")
+            for label, score in grouped["Greenwashing"][:3]:  # Show top 3
+                st.write(f"• {label}: {score:.1%}")
+            st.markdown('</div>', unsafe_allow_html=True)
         
         with col2:
-            st.markdown("**Positive Indicators:**")
-            for label, score in positive_indicators:
-                st.write(f"• {label}: {score:.2%}")
-
+            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+            st.markdown("**✅ Genuine Sustainability Indicators**")
+            for label, score in grouped["Genuine Sustainability"][:3]:  # Show top 3
+                st.write(f"• {label}: {score:.1%}")
+            st.markdown('</div>', unsafe_allow_html=True)
+        
+        with col3:
+            st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+            st.markdown("**📢 Marketing Hype Indicators**")
+            for label, score in grouped["Marketing Hype"][:3]:  # Show top 3
+                st.write(f"• {label}: {score:.1%}")
+            st.markdown('</div>', unsafe_allow_html=True)
 def main():
     # Header
-    st.markdown('<h1 class="main-header">🌱 Greenwashing Detection App</h1>', unsafe_allow_html=True)
-    
-    st.markdown("""
-    This app uses AI-powered zero-shot classification to detect potential greenwashing in sustainability claims.
-    Enter a sustainability claim below to analyze its authenticity.
-    """)
+    st.markdown('''
+    <div style="max-width:900px;margin:2rem auto 0 auto;" class="fade-in-up">
+        <h1 class="main-header">🌱 Spot the Greenwash</h1>
+        <div class="tagline">AI-powered sustainability claim analysis • Know what you're really buying</div>
+    </div>
+    ''', unsafe_allow_html=True)    
+
+    # Enhanced What is Greenwashing Section
+    st.markdown('''
+    <div class="section-box fade-in-up">
+        <div class="section-title">What is Greenwashing?</div>
+        <div class="section-text">
+            Greenwashing is a deceptive marketing practice where companies use misleading environmental claims to appear more sustainable than they actually are. These false or exaggerated claims can include vague terms like "eco-friendly," unsubstantiated carbon neutral promises, or irrelevant certifications.
+            <br><br>
+            Our AI-powered tool helps you cut through the marketing noise and identify potentially misleading sustainability claims, empowering you to make truly informed purchasing decisions.
+        </div>
+    </div>
+    ''', unsafe_allow_html=True)
     
     # Sidebar
     with st.sidebar:
-        st.markdown("## About")
+        st.markdown("## 🎯 How It Works")
         st.markdown("""
-        **Greenwashing** refers to misleading claims about environmental benefits.
+        Our analysis uses advanced Natural Language Processing to classify sustainability claims:
         
-        This app uses the `facebook/bart-large-mnli` model to classify sustainability claims into:
-        - ⚠️ **Greenwashing**: Misleading or unsubstantiated claims
-        - ✅ **Genuine Sustainability**: Authentic environmental commitments
-        - 📢 **Marketing Hype**: Promotional language without substance
-        - 🏆 **Certification-Based Claim**: Claims backed by certifications
-        - 🥗 **Nutritional Health Focused**: Health-oriented sustainability claims
+        **🔴 Greenwashing**: Misleading, vague, or unsubstantiated environmental claims
+        
+        **🟢 Genuine Sustainability**: Authentic commitments with verifiable backing
+        
+        **🟡 Marketing Hype**: Promotional language that lacks substance
         """)
         
-        st.markdown("## How it works")
+        st.markdown("---")
+        st.markdown("## 🧠 AI Technology")
         st.markdown("""
-        1. Enter a sustainability claim
-        2. AI analyzes the text using zero-shot classification
-        3. Get results with confidence scores
-        4. View detailed analysis breakdown
+        - **Model**: `Facebook BART-Large-MNLI`
+        - **Method**: Zero-shot classification
+        - **Analysis**: Multi-label confidence scoring
+        - **Accuracy**: Trained on millions of text samples
         """)
         
-        # Model info
-        st.markdown("## Model Information")
+        st.markdown("---")
+        st.markdown("## 📊 Interpretation Guide")
         st.markdown("""
-        - **Model**: facebook/bart-large-mnli
-        - **Type**: Zero-shot classification
-        - **Framework**: Hugging Face Transformers
+        **Confidence Levels:**
+        - **90-100%**: Very high confidence
+        - **70-89%**: High confidence  
+        - **50-69%**: Moderate confidence
+        - **Below 50%**: Low confidence - seek more info
         """)
+    
     
     # Load model
     if not st.session_state.model_loaded:
@@ -257,8 +398,8 @@ def main():
         "Our product is eco-friendly and good for the environment.",
         "We use 100% certified organic cotton sourced from fair-trade farms with verified supply chain transparency.",
         "This amazing natural product will revolutionize your life!",
-        "Certified by USDA Organic and Fair Trade USA with traceable supply chain documentation.",
-        "Our vitamin-enriched sustainable formula promotes both environmental and personal health."
+        "Our revolutionary green technology reduces carbon emissions without any compromise on performance.",
+        "Made with sustainable materials that protect the planet for future generations."
     ]
     
     selected_example = st.selectbox("Or select an example:", [""] + examples)
@@ -309,6 +450,24 @@ def main():
             disabled=True
         )
         st.button("Analyze Ingredients", disabled=True)
+
+    # About Us section
+    st.markdown('''
+    <div class="section-box fade-in-up">
+        <div class="section-title">About Us:</div>
+        <div class="section-text">
+            <div class="section-text">
+            <strong>Our Mission:</strong> To democratize access to sustainability information and empower consumers to make informed, environmentally conscious purchasing decisions while holding brands accountable for their environmental claims.
+            <br><br>
+            <strong>The Problem:</strong> With increasing consumer demand for sustainable products, companies are making more environmental claims than ever. However, many of these claims are misleading, vague, or completely false - a practice known as greenwashing.
+            <br><br>
+            <strong>Our Solution:</strong> We've developed an AI-powered tool that analyzes sustainability claims using advanced Natural Language Processing, helping consumers identify potentially misleading environmental marketing.
+            <br><br>
+            <strong>Built by Team BharatWin</strong>
+            </div>
+        </div>
+    </div>
+    ''', unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
