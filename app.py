@@ -109,16 +109,15 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Initialize session state
+# Restore session state logic for model loading
 if 'classifier' not in st.session_state:
     st.session_state.classifier = None
 if 'model_loaded' not in st.session_state:
     st.session_state.model_loaded = False
 
-# Use @st.cache_resource to load the model only once per session
-@st.cache_resource(show_spinner="Loading AI model...")
+@st.cache_resource 
 def load_model():
-    """Load the zero-shot classification model (cached)"""
+    """Load the zero-shot classification model"""
     try:
         classifier = pipeline(
             "zero-shot-classification",
@@ -130,47 +129,41 @@ def load_model():
         st.error(f"Error loading model: {str(e)}")
         return None
 
-# Cache example claims and label map (small data) for efficiency
-@st.cache_data
-def get_examples():
-    return [
-        "Our product is eco-friendly and good for the environment.",
-        "We use 100% certified organic cotton sourced from fair-trade farms with verified supply chain transparency.",
-        "This amazing natural product will revolutionize your life!",
-        "Our revolutionary green technology reduces carbon emissions without any compromise on performance.",
-        "Made with sustainable materials that protect the planet for future generations."
+# Label mapping for main categories and their detailed indicators
+label_map = {
+    "Greenwashing": [
+        "Misleading environmental claim",
+        "Vague sustainability statement",
+        "Unsubstantiated green marketing",
+        "Overstated eco-friendly benefits",
+        "Use of irrelevant green imagery"
+    ],
+    "Genuine Sustainability": [
+        "Authentic environmental commitment",
+        "Verified sustainable practice",
+        "Third-party sustainability certification",
+        "Transparency in environmental impact",
+        "Evidence-based climate action"
+    ],
+    "Marketing Hype": [
+        "Generic green buzzwords",
+        "Emotional appeal without proof",
+        "Sustainability used as a selling point",
+        "Trendy environmental phrasing"
     ]
-
-@st.cache_data
-def get_label_map():
-    return {
-        "Greenwashing": [
-            "Misleading environmental claim",
-            "Vague sustainability statement",
-            "Unsubstantiated green marketing",
-            "Overstated eco-friendly benefits",
-            "Use of irrelevant green imagery"
-        ],
-        "Genuine Sustainability": [
-            "Authentic environmental commitment",
-            "Verified sustainable practice",
-            "Third-party sustainability certification",
-            "Transparency in environmental impact",
-            "Evidence-based climate action"
-        ],
-        "Marketing Hype": [
-            "Generic green buzzwords",
-            "Emotional appeal without proof",
-            "Sustainability used as a selling point",
-            "Trendy environmental phrasing"
-        ]
-    }
+}
 
 def analyze_claim(text, classifier):
     """Analyze sustainability claim for greenwashing"""
-    label_map = get_label_map()
-    candidate_labels = list(label_map.keys())
-    detailed_labels = [label for labels in label_map.values() for label in labels]
+    candidate_labels = [
+        "Greenwashing",
+        "Genuine Sustainability",
+        "Marketing Hype"
+    ]
+    # Use all detailed labels from label_map
+    detailed_labels = []
+    for labels in label_map.values():
+        detailed_labels.extend(labels)
     try:
         # Primary classification
         result = classifier(text, candidate_labels, multi_label=True)
@@ -379,24 +372,16 @@ def main():
     
     
     # Load model
-    classifier = load_model()
-    if classifier is None:
-        st.error("Failed to load model. Please try again.")
-        return
+    if not st.session_state.model_loaded:
+        with st.spinner("Loading AI model... This may take a moment."):
+            st.session_state.classifier = load_model()
+            if st.session_state.classifier:
+                st.session_state.model_loaded = True
+                st.success("Model loaded successfully!")
+            else:
+                st.error("Failed to load model. Please try again.")
+                return
 
-    examples = get_examples()
-    # Main interface
-    st.markdown('<h2 class="subheader">Analyze Sustainability Claim</h2>', unsafe_allow_html=True)
-    
-    # Text input
-    claim_text = st.text_area(
-        "Enter a sustainability claim to analyze:",
-        height=100,
-        placeholder="e.g., 'Our product is made from 100% recycled materials and is carbon neutral.'"
-    )
-    
-    # Example claims
-    st.markdown("**Example claims to try:**")
     examples = [
         "Our product is eco-friendly and good for the environment.",
         "We use 100% certified organic cotton sourced from fair-trade farms with verified supply chain transparency.",
@@ -404,21 +389,26 @@ def main():
         "Our revolutionary green technology reduces carbon emissions without any compromise on performance.",
         "Made with sustainable materials that protect the planet for future generations."
     ]
-    
+    # Main interface
+    st.markdown('<h2 class="subheader">Analyze Sustainability Claim</h2>', unsafe_allow_html=True)
+    claim_text = st.text_area(
+        "Enter a sustainability claim to analyze:",
+        height=100,
+        placeholder="e.g., 'Our product is made from 100% recycled materials and is carbon neutral.'"
+    )
+    st.markdown("**Example claims to try:**")
     selected_example = st.selectbox("Or select an example:", [""] + examples)
     if selected_example:
         claim_text = selected_example
-    
+
     # Analysis button
     if st.button("Analyze Claim", type="primary"):
         if claim_text.strip():
             if st.session_state.classifier:
                 with st.spinner("Analyzing claim..."):
                     result, detailed_result = analyze_claim(claim_text, st.session_state.classifier)
-                    
                 if result:
                     display_results(result, detailed_result, claim_text)
-                    
                     # Additional insights
                     st.markdown("---")
                     st.markdown("### 💡 Tips for Identifying Greenwashing")
@@ -466,7 +456,7 @@ def main():
             <br><br>
             <strong>Our Solution:</strong> We've developed an AI-powered tool that analyzes sustainability claims using advanced Natural Language Processing, helping consumers identify potentially misleading environmental marketing.
             <br><br>
-            <strong>Built by Team BharatWin</strong>
+            <strong>Built by Team BharatWin:</strong>
             </div>
         </div>
     </div>
