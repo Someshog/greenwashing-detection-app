@@ -1,5 +1,5 @@
 streamlit>=1.35.0
 transformers
 # For lower memory usage, consider using a smaller model like distilbart-mnli-12-1
-# torch can be replaced with cpu-only if not using GPU
+torch
 plotly
