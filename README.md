@@ -78,7 +78,7 @@ Whether you’re an eco conscious shopper, environmental advocate, or just curio
 ## 👥 Team & Mission
 **Built by Team BharatWin**
 - [Somesh Goyal](https://github.com/Someshog)
-- [Shivi Goyal](https://github.com/shivigoyal4321))
+- [Shivi Goyal](https://github.com/shivigoyal4321)
   
 **Our Mission:**
 > To democratize access to sustainability information and empower consumers to make informed, environmentally conscious purchasing decisions while holding brands accountable for their environmental claims.
