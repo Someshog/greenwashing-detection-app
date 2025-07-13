@@ -48,16 +48,10 @@ Spot the Greenwash is an AI-powered Streamlit app that helps you analyze sustain
 
 ---
 
-## 🌐 Deploy on Streamlit Cloud
-- Push your code to GitHub
-- Go to [Streamlit Cloud](https://streamlit.io/cloud)
-- Create a new app, select your repo and `app.py`
-- Your app will be live and shareable!
-
----
 
 ## 🖼️ Screenshots
-Add screenshots of your app in `SCREENSHOTS.md` to showcase the UI and features.
+
+<img width="947" height="439" alt="ss1" src="https://github.com/user-attachments/assets/c190059a-849e-4dc2-a721-65a5cb81f5d9" />
 
 ---
 
@@ -84,7 +78,7 @@ Add screenshots of your app in `SCREENSHOTS.md` to showcase the UI and features.
 **Our Mission:**
 > To democratize access to sustainability information and empower consumers to make informed, environmentally conscious purchasing decisions while holding brands accountable for their environmental claims.
 
-**Contact:** info@greenwashapp.com
+**Contact:** workwithsomesh1@gmail.com
 
 ---
 
