@@ -457,6 +457,11 @@ def main():
             <strong>Our Solution:</strong> We've developed an AI-powered tool that analyzes sustainability claims using advanced Natural Language Processing, helping consumers identify potentially misleading environmental marketing.
             <br><br>
             <strong>Built by Team BharatWin:</strong>
+            <strong>Built by Team BharatWin:</strong>
+            <ul>
+              <li>Shivi Goyal - Frontend & UI/UX</li>
+              <li>Somesh Goyal - Machine Learning Engineer</li>
+            </ul>
             </div>
         </div>
     </div>
