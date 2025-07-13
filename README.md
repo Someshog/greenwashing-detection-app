@@ -4,7 +4,11 @@
 
 ## Overview
 
-Spot the Greenwash is an AI-powered Streamlit app that helps you analyze sustainability claims and spot greenwashing in product marketing. Using advanced Natural Language Processing (NLP) and zero-shot classification, the app empowers consumers to make informed, environmentally conscious decisions and hold brands accountable for their claims.
+Spot the Greenwash Spot the Greenwash is an AI-powered Streamlit app that aids in determining what sustainability claims are true and what is greenwashing in product marketing! By leveraging advanced natural language processing (NLP) and zero-shot classification techniques, the app will enable people to make informed choices on which products they want to buy, that are also environmentally friendly, and challenge companies promises.
+
+Numerous major brands have been criticized for vague or misleading environmental claims — including H&M for its “Conscious” clothing line, Nestlé for its claims about recyclable plastic materials and Volkswagen for its notorious “clean diesel” campaign. This app will help you to question similar claims and cut through the buzzwords.
+
+Whether you’re an eco conscious shopper, environmental advocate, or just curious — this tool makes it easy to fact check green claims, stay informed, and make decisions that actually support planet.
 
 ---
 
@@ -48,7 +52,6 @@ Spot the Greenwash is an AI-powered Streamlit app that helps you analyze sustain
 
 ---
 
-
 ## 🖼️ Screenshots
 
 <img width="947" height="439" alt="ss1" src="https://github.com/user-attachments/assets/c190059a-849e-4dc2-a721-65a5cb81f5d9" />
@@ -74,7 +77,9 @@ Spot the Greenwash is an AI-powered Streamlit app that helps you analyze sustain
 
 ## 👥 Team & Mission
 **Built by Team BharatWin**
-
+- [Somesh Goyal](https://github.com/Someshog)
+- [Shivi Goyal](https://github.com/shivigoyal4321))
+  
 **Our Mission:**
 > To democratize access to sustainability information and empower consumers to make informed, environmentally conscious purchasing decisions while holding brands accountable for their environmental claims.
 
