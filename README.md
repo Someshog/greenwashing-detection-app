@@ -20,7 +20,7 @@ Spot the Greenwash is an AI-powered Streamlit app that helps you analyze sustain
 ---
 
 ## 🧠 AI Model
-- **Model Used**: [`joeddav/distilbert-base-uncased-mnli`](https://huggingface.co/joeddav/distilbert-base-uncased-mnli)
+- **Model Used**: [`joeddav/distilbert-base-uncased-mnli`](https://huggingface.co/typeform/distilbert-base-uncased-mnli)
 - **Method**: Zero-shot classification via Hugging Face Transformers
 - **Categories**:
   - Greenwashing
